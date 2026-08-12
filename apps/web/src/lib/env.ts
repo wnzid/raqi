@@ -1,0 +1,3 @@
+import { z } from 'zod';
+const publicEnvironmentSchema = z.object({ NEXT_PUBLIC_API_URL: z.string().url().default('http://localhost:4000/api') });
+export const publicEnvironment = publicEnvironmentSchema.parse({ NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL });

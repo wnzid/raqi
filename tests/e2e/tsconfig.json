@@ -1,0 +1,1 @@
+{ "extends": "../../packages/config/typescript/base.json", "compilerOptions": { "target": "ES2022", "module": "NodeNext", "moduleResolution": "NodeNext" }, "include": ["**/*.ts"] }

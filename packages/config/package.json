@@ -1,0 +1,7 @@
+{
+  "name": "@footwear/config",
+  "version": "0.1.0",
+  "private": true,
+  "files": ["typescript"],
+  "scripts": { "lint": "echo 'No source files to lint'", "typecheck": "echo 'Configuration package has no typecheck'", "test": "echo 'No tests in configuration package'", "build": "echo 'Configuration package has no build'" }
+}
