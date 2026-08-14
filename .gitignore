@@ -13,3 +13,4 @@ test-results/
 packages/database/src/generated/
 *.log
 .DS_Store
+.env.example
