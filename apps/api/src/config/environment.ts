@@ -12,6 +12,8 @@ const environmentSchema = z.object({
   S3_REGION: z.string().optional(), S3_BUCKET: z.string().optional(),
   S3_ACCESS_KEY_ID: z.string().optional(), S3_SECRET_ACCESS_KEY: z.string().optional(),
   S3_PUBLIC_URL: z.string().url().or(z.literal('')).optional(),
+  MEDIA_LOCAL_PATH: z.string().min(1).default('./uploads'),
+  MEDIA_PUBLIC_BASE_URL: z.string().url().default('http://localhost:4000/api/media'),
 });
 
 export type Environment = z.infer<typeof environmentSchema>;

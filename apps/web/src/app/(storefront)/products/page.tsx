@@ -1,1 +1,3 @@
-export default function ProductsPage() { return <h1 className="text-2xl font-semibold">Products</h1>; }
+import Link from 'next/link';
+import { listProducts } from '@/lib/api-client';
+export default async function ProductsPage() { try { const result = await listProducts(); return <section><h1 className="text-2xl font-semibold">Products</h1><ul className="mt-6 space-y-4">{result.data.map((product) => <li key={product.id}><Link className="font-medium underline" href={`/product/${product.slug}`}>{product.title}</Link><p className="text-sm text-neutral-600">From {product.effectivePriceFrom.toFixed(2)} · {product.isAvailable ? 'In stock' : 'Unavailable'}</p></li>)}</ul></section>; } catch { return <section><h1 className="text-2xl font-semibold">Products</h1><p className="mt-4 text-neutral-600">Catalog API is unavailable. Start the API and database to view products.</p></section>; } }

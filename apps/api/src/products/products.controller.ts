@@ -1,0 +1,20 @@
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
+import { ApiBadRequestResponse, ApiConflictResponse, ApiCreatedResponse, ApiNoContentResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { createProductSchema, createVariantSchema, productQuerySchema, updateProductSchema, updateVariantSchema, type CreateProductInput, type CreateVariantInput, type ProductQuery, type UpdateProductInput, type UpdateVariantInput } from '@footwear/shared';
+import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { ProductsService } from './products.service';
+
+@ApiTags('products')
+@Controller('products')
+export class ProductsController {
+  constructor(private readonly products: ProductsService) {}
+  @Get() @ApiOperation({ summary: 'List active catalog products' }) @ApiQuery({ name: 'sort', required: false, enum: ['newest', 'price_asc', 'price_desc', 'bestsellers', 'rating'] }) @ApiQuery({ name: 'page', required: false, type: Number }) @ApiQuery({ name: 'pageSize', required: false, type: Number }) @ApiQuery({ name: 'category', required: false }) @ApiQuery({ name: 'gender', required: false, enum: ['WOMEN', 'MEN', 'UNISEX', 'KIDS'] }) @ApiQuery({ name: 'color', required: false }) @ApiQuery({ name: 'sizeEu', required: false, type: Number }) @ApiQuery({ name: 'sizeUk', required: false, type: Number }) @ApiQuery({ name: 'sizeUs', required: false, type: Number }) @ApiQuery({ name: 'material', required: false }) @ApiQuery({ name: 'occasion', required: false }) @ApiQuery({ name: 'soleType', required: false }) @ApiQuery({ name: 'minPrice', required: false, type: Number }) @ApiQuery({ name: 'maxPrice', required: false, type: Number }) @ApiQuery({ name: 'inStock', required: false, type: Boolean }) @ApiOkResponse({ description: 'Paginated catalog results' }) @ApiBadRequestResponse({ description: 'Invalid query' })
+  list(@Query(new ZodValidationPipe(productQuerySchema)) query: ProductQuery) { return this.products.list(query); }
+  @Get('slug/:slug') @ApiOperation({ summary: 'Get storefront product detail by slug' }) @ApiParam({ name: 'slug' }) @ApiOkResponse({ description: 'Product detail with variants and effective prices' }) @ApiNotFoundResponse({ description: 'Product not found' }) getBySlug(@Param('slug') slug: string) { return this.products.getBySlug(slug); }
+  @Post() @ApiCreatedResponse({ description: 'Product created' }) @ApiConflictResponse({ description: 'Slug already exists' }) create(@Body(new ZodValidationPipe(createProductSchema)) input: CreateProductInput) { return this.products.create(input); }
+  @Patch(':id') @ApiOkResponse({ description: 'Product updated' }) @ApiNotFoundResponse({ description: 'Product not found or invalid relation' }) update(@Param('id') id: string, @Body(new ZodValidationPipe(updateProductSchema)) input: UpdateProductInput) { return this.products.update(id, input); }
+  @Delete(':id') @HttpCode(204) @ApiNoContentResponse({ description: 'Product and variants archived; no commerce data is deleted' }) async archive(@Param('id') id: string) { await this.products.archive(id); }
+  @Get(':productId/variants') @ApiOkResponse({ description: 'All variants, including inactive and out-of-stock variants' }) variants(@Param('productId') productId: string) { return this.products.variants(productId); }
+  @Post(':productId/variants') @ApiCreatedResponse({ description: 'Variant created' }) @ApiConflictResponse({ description: 'Duplicate SKU or variant combination' }) createVariant(@Param('productId') productId: string, @Body(new ZodValidationPipe(createVariantSchema)) input: CreateVariantInput) { return this.products.createVariant(productId, input); }
+  @Patch(':productId/variants/:variantId') @ApiOkResponse({ description: 'Variant updated' }) @ApiNotFoundResponse({ description: 'Product/variant mismatch or missing variant' }) updateVariant(@Param('productId') productId: string, @Param('variantId') variantId: string, @Body(new ZodValidationPipe(updateVariantSchema)) input: UpdateVariantInput) { return this.products.updateVariant(productId, variantId, input); }
+}

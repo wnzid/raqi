@@ -1,2 +1,0 @@
-import { ApiStatus } from '@/components/api-status';
-export default function HomePage() { return <section className="space-y-4"><p className="text-sm uppercase tracking-widest text-neutral-500">Foundation ready</p><h1 className="max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl">Footwear commerce, built one focused feature at a time.</h1><p className="max-w-xl text-neutral-600">The storefront shell is ready. Catalog, checkout, accounts, and administration will be added as dedicated features.</p><ApiStatus /></section>; }

@@ -1,0 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import { NotFoundException } from '@nestjs/common';
+import { Prisma } from '@footwear/database';
+import { describe, expect, it, vi } from 'vitest';
+import { OrdersService } from './orders.service';
+const record = { id: 'order-1', orderNumber: 'RAQI-1', userId: 'user-1', status: 'PENDING', paymentStatus: 'UNPAID', paymentMethod: 'CASH_ON_DELIVERY', currency: 'BDT', subtotal: new Prisma.Decimal(100), shippingAmount: new Prisma.Decimal(120), total: new Prisma.Decimal(220), contactName: 'Rafi', contactEmail: 'r@example.com', contactPhone: '01712345678', shippingRecipient: 'Rafi', shippingPhone: '01712345678', shippingAddressLine: 'Road 1', shippingArea: null, shippingCityDistrict: 'Dhaka', shippingPostalCode: null, shippingCountry: 'BD', shippingMethodCode: 'STANDARD', shippingMethodName: 'Standard delivery', guestAccessTokenHash: null, createdAt: new Date(), updatedAt: new Date(), items: [] };
+describe('OrdersService ownership', () => {
+  it('lists only the authenticated customer orders', async () => { const prisma = { order: { findMany: vi.fn().mockResolvedValue([record]) } }; const result = await new OrdersService(prisma as never).list('user-1'); expect(result.data).toHaveLength(1); expect(prisma.order.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: 'user-1' } })); });
+  it('reads only an owned order', async () => { const prisma = { order: { findFirst: vi.fn().mockResolvedValue(record) } }; await new OrdersService(prisma as never).get('user-1', 'RAQI-1'); expect(prisma.order.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { orderNumber: 'RAQI-1', userId: 'user-1' } })); });
+  it('does not expose another customer order', async () => { const prisma = { order: { findFirst: vi.fn().mockResolvedValue(null) } }; await expect(new OrdersService(prisma as never).get('user-2', 'RAQI-1')).rejects.toBeInstanceOf(NotFoundException); });
+  it('requires both guest order number and secret token', async () => { const prisma = { order: { findFirst: vi.fn().mockResolvedValue(null) } }; await expect(new OrdersService(prisma as never).guest({ orderNumber: 'RAQI-1', token: 'x'.repeat(32) })).rejects.toBeInstanceOf(NotFoundException); expect(prisma.order.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ orderNumber: 'RAQI-1', userId: null, guestAccessTokenHash: expect.any(String) }) })); });
+});

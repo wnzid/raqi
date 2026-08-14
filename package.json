@@ -5,16 +5,17 @@
   "packageManager": "pnpm@10.15.1",
   "engines": { "node": ">=20.19.0" },
   "scripts": {
-    "dev": "pnpm --parallel --filter @footwear/web --filter @footwear/api dev",
+    "dev": "pnpm --filter @footwear/shared build && pnpm --parallel --filter @footwear/shared --filter @footwear/web --filter @footwear/api dev",
     "dev:web": "pnpm --filter @footwear/web dev",
     "dev:api": "pnpm --filter @footwear/api dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm --filter '!@footwear/e2e' -r test",
+    "test": "pnpm --filter @footwear/shared --filter @footwear/api --filter @footwear/web test",
     "test:e2e": "pnpm --filter @footwear/e2e test",
     "db:generate": "pnpm --filter @footwear/database db:generate",
     "db:migrate": "pnpm --filter @footwear/database db:migrate",
-    "db:studio": "pnpm --filter @footwear/database db:studio"
+    "db:studio": "pnpm --filter @footwear/database db:studio",
+    "db:seed": "pnpm --filter @footwear/database db:seed"
   }
 }

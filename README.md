@@ -15,7 +15,11 @@ Products are merchandising parents. `ProductVariant` is the sellable SKU and exc
 
 Search stays inside PostgreSQL. The initial migration enables `pg_trgm`; PostgreSQL full-text search is built in and future search migrations can add generated `tsvector` columns, GIN indexes, dictionaries, and synonym tables when search behavior is defined.
 
-Better Auth is the selected identity/session system. Its adapter and API guard are deferred until account models are introduced; the decision is documented in `apps/web/src/lib/auth/README.md`. Guest checkout remains independent of authentication.
+Better Auth provides email/password identity and database-backed cookie sessions through Next.js. NestJS validates the same sessions for protected account and admin boundaries. Customer profiles and ownership-scoped addresses are persisted separately from provider identity records; guest checkout remains independent of authentication.
+
+The cart supports both authenticated customers and guests. Guest carts are identified by a random HTTP-only cookie while only its hash is stored in PostgreSQL. Cart lines reference sellable variants, and the API owns pricing, stock validation, totals, and transactional guest-to-customer merging. Cart quantities do not reserve or decrement inventory.
+
+Checkout converts the current guest or customer cart into an immutable order inside a serializable transaction. Current catalog prices and stock are revalidated, inventory is conditionally decremented, order/contact/address snapshots are created, and the cart is cleared only on commit. Initial delivery is an internal standard-delivery method and payment is cash on delivery; no payment or courier provider is integrated.
 
 ## Prerequisites
 
@@ -52,6 +56,7 @@ The checked-in migration is suitable for a clean database. For later schema chan
 | `pnpm db:generate` | Generate Prisma Client |
 | `pnpm db:migrate` | Create/apply a development migration |
 | `pnpm db:studio` | Open Prisma Studio |
+| `pnpm db:seed` | Seed the development footwear catalog |
 
 ## Environment
 
@@ -69,4 +74,4 @@ pnpm test
 pnpm build
 ```
 
-CI repeats these checks and applies migrations against ephemeral PostgreSQL. Production deployment, payment/courier providers, complete auth, catalogs, checkout, workers, media SDKs, and search ranking are intentionally deferred until their feature requirements are implemented.
+CI repeats these checks and applies migrations against ephemeral PostgreSQL. Production deployment, payment/courier providers, checkout, workers, media SDKs, and search ranking are intentionally deferred until their feature requirements are implemented.

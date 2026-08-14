@@ -1,0 +1,14 @@
+import { z } from 'zod';
+import { orderStatusSchema, paymentMethodSchema, paymentStatusSchema } from './order';
+export const updateOrderStatusSchema = z.object({ status: orderStatusSchema });
+export const adminOrderQuerySchema = z.object({ page: z.coerce.number().int().positive().default(1), pageSize: z.coerce.number().int().positive().max(100).default(25), orderNumber: z.string().trim().optional(), email: z.string().trim().optional(), status: orderStatusSchema.optional(), paymentStatus: paymentStatusSchema.optional(), paymentMethod: paymentMethodSchema.optional(), dateFrom: z.coerce.date().optional(), dateTo: z.coerce.date().optional() });
+export const inventoryUpdateSchema = z.object({ stockQuantity: z.coerce.number().int().nonnegative() });
+const slug = z.string().trim().min(2).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+export const createCategorySchema = z.object({ name: z.string().trim().min(2).max(100), slug, parentId: z.string().cuid().nullable().optional(), isActive: z.boolean().default(true) });
+export const updateCategorySchema = createCategorySchema.partial().refine((v) => Object.keys(v).length > 0);
+export const createColorSchema = z.object({ name: z.string().trim().min(2).max(100), slug, hex: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(), isActive: z.boolean().default(true) });
+export const updateColorSchema = createColorSchema.partial().refine((v) => Object.keys(v).length > 0);
+export const createOccasionSchema = z.object({ name: z.string().trim().min(2).max(100), slug, isActive: z.boolean().default(true) });
+export const updateOccasionSchema = createOccasionSchema.partial().refine((v) => Object.keys(v).length > 0);
+export const reorderMediaSchema = z.object({ items: z.array(z.object({ id: z.string().cuid(), position: z.number().int().nonnegative(), isPrimary: z.boolean().optional() })).min(1) });
+export type AdminOrderQuery = z.infer<typeof adminOrderQuerySchema>;
