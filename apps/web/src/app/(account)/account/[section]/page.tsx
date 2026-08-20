@@ -1,8 +1,24 @@
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { AddressBook } from '@/components/account/address-book';
+import { ChangePasswordForm } from '@/components/account/change-password-form';
 import { ProfileForm } from '@/components/account/profile-form';
 import { accountApi, ordersApi } from '@/lib/api-client';
 import { auth } from '@/lib/auth';
 import { getServerAccount } from '@/lib/server-account';
-export default async function AccountSectionPage({ params }: { params: Promise<{ section: string }> }) { const { section } = await params; if (!await auth.api.getSession({ headers: await headers() })) redirect(`/login?returnTo=/account/${encodeURIComponent(section)}`); const account = await getServerAccount(); if (section === 'profile') return <ProfileForm account={account} />; const incoming = await headers(); const init = { headers: { cookie: incoming.get('cookie') ?? '' } }; if (section === 'addresses') return <AddressBook initial={await accountApi.addresses(init)} />; if (section === 'orders') { const orders = await ordersApi.list(init); return <section className="space-y-4"><h1 className="text-2xl font-semibold">Orders</h1>{orders.data.length ? <ul className="divide-y">{orders.data.map((order) => <li className="flex justify-between py-4" key={order.orderNumber}><div><a className="font-medium underline" href={`/account/orders/${order.orderNumber}`}>{order.orderNumber}</a><p className="text-sm text-neutral-600">{new Date(order.createdAt).toLocaleDateString()} · {order.status} · {order.paymentStatus}</p></div><span>{order.total.toFixed(2)} BDT</span></li>)}</ul> : <p className="text-neutral-600">You have not placed any orders yet.</p>}</section>; } notFound(); }
+
+export default async function AccountSectionPage({ params }: { params: Promise<{ section: string }> }) {
+  const { section } = await params;
+  if (!await auth.api.getSession({ headers: await headers() })) redirect(`/login?returnTo=/account/${encodeURIComponent(section)}`);
+  if (section === 'security') return <ChangePasswordForm />;
+  const account = await getServerAccount();
+  if (section === 'profile') return <ProfileForm account={account} />;
+  const incoming = await headers();
+  const init = { headers: { cookie: incoming.get('cookie') ?? '' } };
+  if (section === 'addresses') return <AddressBook initial={await accountApi.addresses(init)} />;
+  if (section === 'orders') {
+    const orders = await ordersApi.list(init);
+    return <section className="space-y-4"><h1 className="text-2xl font-semibold">Orders</h1>{orders.data.length ? <ul className="divide-y">{orders.data.map((order) => <li className="flex justify-between py-4" key={order.orderNumber}><div><a className="font-medium underline" href={`/account/orders/${order.orderNumber}`}>{order.orderNumber}</a><p className="text-sm text-neutral-600">{new Date(order.createdAt).toLocaleDateString()} · {order.status} · {order.paymentStatus}</p></div><span>{order.total.toFixed(2)} BDT</span></li>)}</ul> : <p className="text-neutral-600">You have not placed any orders yet.</p>}</section>;
+  }
+  notFound();
+}

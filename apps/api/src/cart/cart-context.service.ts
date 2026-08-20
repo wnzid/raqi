@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { createHash, randomBytes } from 'node:crypto';
 import { fromNodeHeaders } from 'better-auth/node';
 import { auth } from '../auth/auth';
+import { cartTiming } from './cart-timing';
 
 export const GUEST_CART_COOKIE = 'raqi_guest_cart';
 export interface CartContext { userId?: string; guestTokenHash?: string; }
@@ -11,7 +12,9 @@ const hashToken = (token: string): string => createHash('sha256').update(token).
 @Injectable()
 export class CartContextService {
   async resolve(request: Request, response: Response, createGuest = false): Promise<CartContext> {
+    const started=performance.now();
     const session = await auth.api.getSession({ headers: fromNodeHeaders(request.headers) });
+    cartTiming('auth/session',started);
     const token = this.readCookie(request.headers.cookie, GUEST_CART_COOKIE);
     if (session?.user.isActive !== false && session?.user.id) return { userId: session.user.id, ...(token ? { guestTokenHash: hashToken(token) } : {}) };
     if (token) return { guestTokenHash: hashToken(token) };

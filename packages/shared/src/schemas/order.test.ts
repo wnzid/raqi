@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { checkoutSchema, orderConfirmationSchema, orderStatusSchema, paymentStatusSchema } from './order';
+import { checkoutSchema,deliveryFeeForDistrict, orderConfirmationSchema, orderStatusSchema, paymentStatusSchema } from './order';
 const contact = { name: 'Rafi Ahmed', email: 'rafi@example.com', phone: '+8801712345678' };
 const shippingAddress = { recipientName: 'Rafi Ahmed', phone: '01712345678', addressLine: '12 Road 4', cityDistrict: 'Dhaka' };
 describe('checkout and order contracts', () => {
+  it('normalizes Dhaka delivery pricing and charges the national rate elsewhere',()=>{for(const district of ['Dhaka','DHAKA','dhaka',' Dhaka '])expect(deliveryFeeForDistrict(district)).toBe(60);expect(deliveryFeeForDistrict('Chattogram')).toBe(120)});
   it('accepts guest checkout with an inline address', () => expect(checkoutSchema.parse({ contact, shippingAddress })).toMatchObject({ shippingMethod: 'STANDARD', paymentMethod: 'CASH_ON_DELIVERY' }));
   it('accepts authenticated checkout with a saved address', () => expect(checkoutSchema.parse({ contact, savedAddressId: 'cm12345678901234567890123' })).toHaveProperty('savedAddressId'));
   it('rejects invalid email', () => expect(() => checkoutSchema.parse({ contact: { ...contact, email: 'bad' }, shippingAddress })).toThrow());

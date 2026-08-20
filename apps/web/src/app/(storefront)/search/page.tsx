@@ -1,1 +1,7 @@
-export default function SearchPage() { return <h1 className="text-2xl font-semibold">Search</h1>; }
+import type { Metadata } from 'next';
+import { Search } from 'lucide-react';
+import Link from 'next/link';
+import { ProductCard } from '@/components/catalog/product-card';
+import { listProducts } from '@/lib/api-client';
+export const metadata:Metadata={title:'Search'};
+export default async function SearchPage({searchParams}:{searchParams:Promise<{q?:string}>}) { const {q}=await searchParams; const query=q?.trim()??''; const result=query?await listProducts({q:query}).catch(()=>null):null; return <section className="container page"><div className="mx-auto max-w-3xl text-center"><p className="eyebrow">Find your pair</p><h1 className="title mt-4">Search RAQI</h1><form className="relative mt-8" action="/search"><label className="sr-only" htmlFor="search">Search products</label><input className="field h-14 pr-14 text-lg" id="search" name="q" defaultValue={query} placeholder="Search by style, material or name" autoFocus/><button className="absolute right-0 top-0 flex h-14 w-14 items-center justify-center" aria-label="Search"><Search size={20}/></button></form></div>{query&&<div className="mt-12"><p className="text-sm muted">{result?.pagination.total??0} results for <strong className="text-[var(--ink)]">“{query}”</strong></p>{result?.data.length?<div className="product-grid mt-6">{result.data.map(product=><ProductCard key={product.id} product={product}/>)}</div>:<div className="py-20 text-center"><h2 className="section-title">No results for “{query}”</h2><p className="mt-3 muted">Try another search or browse all products.</p><Link className="button mt-6" href="/products">Browse footwear</Link></div>}</div>}</section> }

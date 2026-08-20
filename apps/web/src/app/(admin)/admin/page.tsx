@@ -1,4 +1,3 @@
-import { headers } from 'next/headers';
-import { notFound, redirect } from 'next/navigation';
-import { auth, authPrisma } from '@/lib/auth';
-export default async function AdminPage() { const session = await auth.api.getSession({ headers: await headers() }); if (!session) redirect('/login?returnTo=/admin'); const user = await authPrisma.user.findUnique({ where: { id: session.user.id }, select: { role: true, isActive: true } }); if (!user?.isActive) redirect('/login'); if (user.role !== 'ADMIN') notFound(); return <h1 className="text-2xl font-semibold">Administration</h1>; }
+import Link from 'next/link';
+const actions:Array<[string,string,string]>=[['Add a product','Create product information, variants and photos.','/admin/products/new'],['Manage inventory','Update stock across every sellable SKU.','/admin/inventory'],['Review orders','Progress new COD orders through fulfillment.','/admin/orders']];
+export default function AdminPage(){return <section><p className="eyebrow">Store operations</p><h1 className="title mt-3">Overview</h1><p className="mt-3 muted">Choose a task to manage RAQI.</p><div className="mt-8 grid gap-4 lg:grid-cols-3">{actions.map(([title,copy,href])=><Link className="panel bg-white hover:border-black" href={href} key={href}><h2 className="text-lg font-semibold">{title}</h2><p className="mt-2 text-sm leading-6 muted">{copy}</p><span className="mt-8 block text-sm font-semibold">Open →</span></Link>)}</div></section>}

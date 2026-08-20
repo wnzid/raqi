@@ -1,7 +1,29 @@
-import { Menu, Search, ShoppingBag, UserRound } from 'lucide-react';
+import { Search, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
+import { getActiveAnnouncement } from '@/lib/api-client';
 import { getServerCart } from '@/lib/server-cart';
-const links=[{href:'/products',label:'Shop all'},{href:'/products?gender=MEN',label:'Men'},{href:'/products?gender=WOMEN',label:'Women'}];
-export async function Header() { const [session,cart]=await Promise.all([auth.api.getSession({headers:await headers()}),getServerCart().catch(()=>({items:[],subtotal:0,totalQuantity:0}))]); return <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-white/95 backdrop-blur-sm"><div className="container flex h-[4.5rem] items-center justify-between gap-5"><details className="group md:hidden"><summary className="flex list-none items-center p-2" aria-label="Open navigation"><Menu size={21}/></summary><div className="fixed inset-x-0 top-[4.5rem] border-b border-[var(--line)] bg-white p-5 shadow-sm"><nav className="grid gap-1" aria-label="Mobile navigation">{links.map(link=><Link className="border-b border-[var(--line)] py-4 text-lg" href={link.href} key={link.href}>{link.label}</Link>)}<Link className="py-4 text-lg" href="/search">Search</Link></nav></div></details><Link className="text-xl font-bold tracking-[.24em]" href="/" aria-label="RAQI home">RAQI</Link><nav className="hidden items-center gap-7 text-sm font-medium md:flex" aria-label="Primary">{links.map(link=><Link className="transition-colors hover:text-[var(--muted)]" href={link.href} key={link.href}>{link.label}</Link>)}</nav><nav className="flex items-center gap-1 sm:gap-3" aria-label="Customer actions"><Link className="hidden p-2 sm:block" href="/search" aria-label="Search"><Search size={20}/></Link><Link className="p-2" href={session?'/account':'/login'} aria-label={session?'Account':'Log in'}><UserRound size={20}/></Link><Link className="flex items-center gap-1.5 p-2 text-sm" href="/cart" aria-label={`Cart with ${cart.totalQuantity} items`}><ShoppingBag size={20}/><span>{cart.totalQuantity}</span></Link></nav></div></header>; }
+import { AnnouncementBanner } from './announcement-banner';
+import { MobileNavigation } from './mobile-navigation';
+import { CartCount } from '../cart/cart-count';
+
+const links = [{ href: '/products', label: 'Shop all' }, { href: '/products?gender=MEN', label: 'Men' }, { href: '/products?gender=WOMEN', label: 'Women' }, { href: '/products?newArrival=true', label: 'New arrivals' }];
+
+export async function Header() {
+  const incoming = await headers();
+  const [session, cart, announcement] = await Promise.all([
+    auth.api.getSession({ headers: incoming }),
+    getServerCart().catch(() => ({ items: [], subtotal: 0, totalQuantity: 0 })),
+    getActiveAnnouncement().catch(() => null),
+  ]);
+  return <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-white">
+    <div className="container relative flex h-16 items-center justify-between gap-5 md:h-[4.25rem]">
+      <MobileNavigation cartQuantity={cart.totalQuantity} />
+      <Link className="hidden text-xl font-bold tracking-[.24em] md:block" href="/" aria-label="RAQI home">RAQI</Link>
+      <nav className="hidden items-center gap-7 text-sm font-medium md:flex" aria-label="Primary">{links.map((link) => <Link className="transition-colors hover:text-[var(--muted)]" href={link.href} key={link.label}>{link.label}</Link>)}</nav>
+      <nav className="hidden items-center gap-1 md:flex" aria-label="Customer actions"><Link className="icon-button" href="/search" aria-label="Search"><Search size={19} /></Link><Link className="icon-button" href={session ? '/account' : '/login'} aria-label={session ? 'Account' : 'Log in'}><UserRound size={19} /></Link><CartCount initial={cart.totalQuantity}/></nav>
+    </div>
+    <AnnouncementBanner announcement={announcement} />
+  </header>;
+}

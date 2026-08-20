@@ -1,0 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-base-to-string */
+import type { OrderDetail } from '@footwear/shared';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { OrderCancellationEmailService } from './order-cancellation-email.service';
+
+afterEach(()=>vi.unstubAllGlobals());
+const order:OrderDetail={orderNumber:'RAQI-123',status:'CANCELLED',paymentStatus:'UNPAID',paymentMethod:'CASH_ON_DELIVERY',currency:'BDT',subtotal:3500,shippingAmount:60,total:3560,createdAt:'2026-08-20T10:00:00.000Z',confirmedAt:null,contact:{name:'Customer',email:'customer@example.com',phone:'01700000000'},shippingAddress:{recipientName:'Customer',phone:'01700000000',addressLine:'Road 1',area:null,cityDistrict:'Dhaka',postalCode:null,country:'BD'},shippingMethod:{code:'STANDARD',name:'Standard delivery'},items:[{id:'item-1',productId:'product-1',variantId:'variant-1',productName:'ASICS NOVABLAST',productSlug:'asics-novablast-black',sku:'ASICS-42',colorName:'Black',sizeEu:42,sizeUk:null,sizeUs:null,unitPrice:3500,quantity:1,lineSubtotal:3500}]};
+function setup(ok=true){const fetchMock=vi.fn().mockResolvedValue({ok,status:ok?200:503});vi.stubGlobal('fetch',fetchMock);const values:Record<string,string>={MAILJET_API_KEY:'key',MAILJET_SECRET_KEY:'secret',MAILJET_FROM_EMAIL:'verified@raqi.test',MAILJET_FROM_NAME:'RAQI',RAQI_CONTACT_EMAIL:'raqiofficial.bd@gmail.com',RAQI_INSTAGRAM_URL:'https://www.instagram.com/raqiofficial.bd',RAQI_FACEBOOK_URL:'https://www.facebook.com/raqiofficial.bd'};const config={getOrThrow:vi.fn((key:string)=>values[key]),get:vi.fn((key:string)=>values[key])};return{service:new OrderCancellationEmailService(config as never),fetchMock}}
+
+describe('OrderCancellationEmailService',()=>{
+  it('sends snapshot details without an invoice attachment',async()=>{const{service,fetchMock}=setup();await service.send(order);expect(fetchMock).toHaveBeenCalledOnce();const request=fetchMock.mock.calls[0]![1] as RequestInit,body=JSON.parse(String(request.body)),message=body.Messages[0];expect(message.To).toEqual([{Email:'customer@example.com'}]);expect(message.Subject).toBe('Your RAQI order #RAQI-123 has been cancelled');expect(message.TextPart).toContain('ASICS NOVABLAST | Black');expect(message.TextPart).toContain('Delivery: ৳60');expect(message.TextPart).toContain('raqiofficial.bd@gmail.com');expect(message.Attachments).toBeUndefined()});
+  it('contains Mailjet failure so cancellation remains committed',async()=>{const{service}=setup(false);await expect(service.send(order)).resolves.toBeUndefined()});
+});

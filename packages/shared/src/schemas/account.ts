@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const optionalText = (max: number) => z.string().trim().min(1).max(max).nullable().optional();
-export const userRoleSchema = z.enum(['CUSTOMER', 'ADMIN']);
+export const userRoleSchema = z.enum(['CUSTOMER', 'MANAGER', 'SUPER_ADMIN']);
 export const updateProfileSchema = z.object({ firstName: optionalText(100), lastName: optionalText(100), phone: optionalText(30) }).refine((value) => Object.keys(value).length > 0, 'At least one field is required');
 
 export const createAddressSchema = z.object({

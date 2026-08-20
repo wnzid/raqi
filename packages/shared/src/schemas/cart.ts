@@ -6,7 +6,7 @@ export const updateCartItemSchema = z.object({ quantity: cartQuantitySchema });
 export const cartItemSchema = z.object({
   id: z.string(), variantId: z.string(), sku: z.string(), productId: z.string(), productName: z.string(), productSlug: z.string(),
   color: z.object({ name: z.string(), slug: z.string(), hex: z.string().nullable() }), sizeEu: z.number().nullable(), sizeUk: z.number().nullable(), sizeUs: z.number().nullable(),
-  thumbnail: z.string().nullable(), quantity: z.number().int().positive(), availableStock: z.number().int().nonnegative(), isAvailable: z.boolean(), unitPrice: z.number().nonnegative(), lineSubtotal: z.number().nonnegative(),
+  thumbnail: z.string().nullable(), quantity: z.number().int().positive(), availableStock: z.number().int().nonnegative(), isAvailable: z.boolean(), regularPrice: z.number().nonnegative(), unitPrice: z.number().nonnegative(), lineSubtotal: z.number().nonnegative(),
 });
 export const cartSchema = z.object({ items: z.array(cartItemSchema), subtotal: z.number().nonnegative(), totalQuantity: z.number().int().nonnegative() });
 

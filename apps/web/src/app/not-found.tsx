@@ -1,2 +1,2 @@
 import Link from 'next/link';
-export default function NotFound() { return <section><h1 className="text-2xl font-semibold">Page not found</h1><Link className="mt-4 inline-block underline" href="/">Return home</Link></section>; }
+export default function NotFound(){return <section className="container page text-center"><p className="eyebrow">404 / Not found</p><h1 className="title mt-4">We couldn’t find that page.</h1><p className="mt-4 muted">The product or page may have moved.</p><div className="mt-7 flex justify-center gap-3"><Link className="button" href="/products">Browse products</Link><Link className="button secondary" href="/">Return home</Link></div></section>}

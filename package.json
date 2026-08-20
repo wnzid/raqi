@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@10.15.1",
-  "engines": { "node": ">=20.19.0" },
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "dev": "pnpm --filter @footwear/shared build && pnpm --parallel --filter @footwear/shared --filter @footwear/web --filter @footwear/api dev",
     "dev:web": "pnpm --filter @footwear/web dev",
@@ -16,6 +18,10 @@
     "db:generate": "pnpm --filter @footwear/database db:generate",
     "db:migrate": "pnpm --filter @footwear/database db:migrate",
     "db:studio": "pnpm --filter @footwear/database db:studio",
-    "db:seed": "pnpm --filter @footwear/database db:seed"
+    "db:seed": "pnpm --filter @footwear/database db:seed",
+    "bootstrap:super-admin": "pnpm --filter @footwear/api bootstrap:super-admin"
+  },
+  "devDependencies": {
+    "prisma": "^7.9.1"
   }
 }

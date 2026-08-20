@@ -4,6 +4,8 @@ import type { AddCartItemInput, ShoppingCart, UpdateCartItemInput } from '@footw
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import type { CartContext } from './cart-context.service';
 import { cartVariantSellable, mergedCartQuantity } from './cart.rules';
+import { resolveMediaUrl } from '../media/media-url';
+import { cartTiming } from './cart-timing';
 
 const cartInclude = { items: { include: { variant: { include: { color: true, product: { include: { media: { orderBy: { position: 'asc' as const } } } } } } }, orderBy: { createdAt: 'asc' as const } } } satisfies Prisma.CartInclude;
 type CartRecord = Prisma.CartGetPayload<{ include: typeof cartInclude }>;
@@ -27,9 +29,11 @@ export class CartService {
   }
 
   async update(context: CartContext, itemId: string, input: UpdateCartItemInput): Promise<ShoppingCart> {
-    const cart = await this.requireCart(context); const item = await this.prisma.cartItem.findFirst({ where: { id: itemId, cartId: cart.id }, include: { variant: { include: { product: true, color: true } } } });
+    const findStarted=performance.now();
+    const item = await this.prisma.cartItem.findFirst({ where: { id: itemId, cart: this.owner(context) }, include: { variant: { include: { product: true, color: true } } } });
+    cartTiming('find item + variant',findStarted);
     if (!item) throw new NotFoundException('Cart item not found'); this.requireSellable(item.variant, input.quantity);
-    await this.prisma.cartItem.update({ where: { id: item.id }, data: { quantity: input.quantity } }); return this.get(context);
+    const updateStarted=performance.now();await this.prisma.cartItem.update({ where: { id: item.id }, data: { quantity: input.quantity } });cartTiming('update item',updateStarted);const serializeStarted=performance.now();const cart=await this.prisma.cart.findUnique({where:{id:item.cartId},include:cartInclude});const result=cart?this.map(cart):this.empty();cartTiming('fetch + serialize cart',serializeStarted);return result;
   }
   async remove(context: CartContext, itemId: string): Promise<ShoppingCart> { const cart = await this.requireCart(context); const result = await this.prisma.cartItem.deleteMany({ where: { id: itemId, cartId: cart.id } }); if (!result.count) throw new NotFoundException('Cart item not found'); return this.get(context); }
   async clear(context: CartContext): Promise<void> { const cart = await this.findCart(context); if (cart) await this.prisma.cartItem.deleteMany({ where: { cartId: cart.id } }); }
@@ -62,7 +66,7 @@ export class CartService {
   private requireStock(stock: number, quantity: number): void { if (quantity > stock) throw new ConflictException(`Only ${stock} units are currently available`); }
   private empty(): ShoppingCart { return { items: [], subtotal: 0, totalQuantity: 0 }; }
   private map(cart: CartRecord): ShoppingCart {
-    let subtotal = new Prisma.Decimal(0); const items = cart.items.map((item) => { const unit = item.variant.priceOverride ?? item.variant.product.basePrice; const available = this.sellable(item.variant); const line = available ? unit.mul(item.quantity) : new Prisma.Decimal(0); subtotal = subtotal.add(line); const media = item.variant.product.media.find((entry) => entry.variantId === item.variantId && entry.isPrimary) ?? item.variant.product.media.find((entry) => entry.isPrimary) ?? item.variant.product.media[0]; return { id: item.id, variantId: item.variantId, sku: item.variant.sku, productId: item.variant.product.id, productName: item.variant.product.title, productSlug: item.variant.product.slug, color: { name: item.variant.color.name, slug: item.variant.color.slug, hex: item.variant.color.hex }, sizeEu: item.variant.sizeEu?.toNumber() ?? null, sizeUk: item.variant.sizeUk?.toNumber() ?? null, sizeUs: item.variant.sizeUs?.toNumber() ?? null, thumbnail: media?.objectKey ?? null, quantity: item.quantity, availableStock: item.variant.stockQuantity, isAvailable: available && item.quantity <= item.variant.stockQuantity, unitPrice: unit.toNumber(), lineSubtotal: line.toNumber() }; });
+    let subtotal = new Prisma.Decimal(0); const items = cart.items.map((item) => { const unit = item.variant.priceOverride ?? item.variant.product.salePrice ?? item.variant.product.basePrice; const available = this.sellable(item.variant); const line = available ? unit.mul(item.quantity) : new Prisma.Decimal(0); subtotal = subtotal.add(line); const media = item.variant.product.media.find((entry) => entry.variantId === item.variantId && entry.isPrimary) ?? item.variant.product.media.find((entry) => entry.isPrimary) ?? item.variant.product.media[0]; return { id: item.id, variantId: item.variantId, sku: item.variant.sku, productId: item.variant.product.id, productName: item.variant.product.title, productSlug: item.variant.product.slug, color: { name: item.variant.color.name, slug: item.variant.color.slug, hex: item.variant.color.hex }, sizeEu: item.variant.sizeEu?.toNumber() ?? null, sizeUk: item.variant.sizeUk?.toNumber() ?? null, sizeUs: item.variant.sizeUs?.toNumber() ?? null, thumbnail: media?resolveMediaUrl(media.objectKey):null, quantity: item.quantity, availableStock: item.variant.stockQuantity, isAvailable: available && item.quantity <= item.variant.stockQuantity, regularPrice: item.variant.product.basePrice.toNumber(), unitPrice: unit.toNumber(), lineSubtotal: line.toNumber() }; });
     return { items, subtotal: subtotal.toNumber(), totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0) };
   }
 }

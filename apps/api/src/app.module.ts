@@ -11,6 +11,9 @@ import { CartModule } from './cart/cart.module';
 import { CheckoutModule } from './checkout/checkout.module';
 import { OrdersModule } from './orders/orders.module';
 import { MediaModule } from './media/media.module';
+import { AuditModule } from './audit/audit.module';
+import { SuperAdminModule } from './super-admin/super-admin.module';
+import { AnnouncementModule } from './announcement/announcement.module';
 
 @Module({
   imports: [
@@ -28,6 +31,9 @@ import { MediaModule } from './media/media.module';
     CheckoutModule,
     OrdersModule,
     MediaModule,
+    AuditModule,
+    SuperAdminModule,
+    AnnouncementModule,
   ],
 })
 export class AppModule {}

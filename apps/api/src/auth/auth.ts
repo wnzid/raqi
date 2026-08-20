@@ -1,10 +1,9 @@
-import { PrismaClient } from '@footwear/database';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { prismaService } from '../infrastructure/prisma/prisma.service';
 
-const prisma = new PrismaClient();
 export const auth = betterAuth({
-  database: prismaAdapter(prisma, { provider: 'postgresql' }),
+  database: prismaAdapter(prismaService, { provider: 'postgresql' }),
   baseURL: process.env.BETTER_AUTH_URL,
   secret: process.env.BETTER_AUTH_SECRET,
   trustedOrigins: [process.env.WEB_URL ?? 'http://localhost:3000'],

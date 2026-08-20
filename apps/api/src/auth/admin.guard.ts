@@ -6,7 +6,7 @@ import type { AuthenticatedUser } from './auth.types';
 export class AdminGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const user = context.switchToHttp().getRequest<Request & { user?: AuthenticatedUser }>().user;
-    if (user?.role !== 'ADMIN') throw new ForbiddenException('Administrator access required');
+    if (!user || !['MANAGER', 'SUPER_ADMIN'].includes(user.role)) throw new ForbiddenException('Manager access required');
     return true;
   }
 }

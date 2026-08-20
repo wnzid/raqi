@@ -1,0 +1,3 @@
+import React from'react';import{cleanup,fireEvent,render}from'@testing-library/react';import{afterEach,describe,expect,it,vi}from'vitest';import{CatalogSortBehavior}from'./catalog-sort-behavior';
+afterEach(cleanup);
+describe('CatalogSortBehavior',()=>{it('submits the GET form as soon as sort changes',()=>{const submit=vi.spyOn(HTMLFormElement.prototype,'requestSubmit').mockImplementation(()=>undefined);const{getByLabelText}=render(<form><CatalogSortBehavior/><select aria-label="Sort products" name="sort"><option value="newest">Newest</option><option value="price_asc">Price low to high</option></select></form>);fireEvent.change(getByLabelText('Sort products'),{target:{value:'price_asc'}});expect(submit).toHaveBeenCalledOnce();submit.mockRestore()})});

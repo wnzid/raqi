@@ -4,12 +4,12 @@ Production-oriented foundation for a mobile-first footwear storefront, customer 
 
 ## Architecture
 
-- `apps/web` — Next.js App Router storefront, account, checkout, and admin route shells. React Server Components are the default; TanStack Query is available only for interactive server state.
-- `apps/api` — NestJS REST API with `/api` prefix, Zod environment validation, global request validation/error handling, Swagger, Prisma, Redis/BullMQ configuration, and `GET /api/health`.
-- `packages/database` — PostgreSQL/Prisma schema, generated client boundary, migration, and local extension initialization.
-- `packages/shared` — framework-neutral Zod contracts, types, and domain constants.
-- `packages/config` — strict shared TypeScript defaults.
-- `tests/e2e` — Playwright cross-application test foundation.
+- `apps/web`: Next.js App Router storefront, account, checkout, and admin route shells. React Server Components are the default; TanStack Query is available only for interactive server state.
+- `apps/api`: NestJS REST API with `/api` prefix, Zod environment validation, global request validation/error handling, Swagger, Prisma, Redis/BullMQ configuration, and `GET /api/health`.
+- `packages/database`: PostgreSQL/Prisma schema, generated client boundary, migration, and local extension initialization.
+- `packages/shared`: framework-neutral Zod contracts, types, and domain constants.
+- `packages/config`: strict shared TypeScript defaults.
+- `tests/e2e`: Playwright cross-application test foundation.
 
 Products are merchandising parents. `ProductVariant` is the sellable SKU and exclusively owns inventory, regional size values, and optional price overrides. Media can be product-wide or variant-specific. This prevents product-level stock from becoming authoritative.
 
@@ -46,17 +46,17 @@ The checked-in migration is suitable for a clean database. For later schema chan
 
 | Command | Purpose |
 | --- | --- |
-| `pnpm dev` | Run web and API watchers |
-| `pnpm dev:web` / `pnpm dev:api` | Run one application |
-| `pnpm build` | Build all workspaces |
-| `pnpm lint` | Lint all workspaces |
-| `pnpm typecheck` | Strict TypeScript checks |
-| `pnpm test` | Unit and API smoke tests |
-| `pnpm test:e2e` | Playwright storefront smoke test |
-| `pnpm db:generate` | Generate Prisma Client |
-| `pnpm db:migrate` | Create/apply a development migration |
-| `pnpm db:studio` | Open Prisma Studio |
-| `pnpm db:seed` | Seed the development footwear catalog |
+| `pnpm dev`: Run web and API watchers |
+| `pnpm dev:web` / `pnpm dev:api`: Run one application |
+| `pnpm build`: Build all workspaces |
+| `pnpm lint`: Lint all workspaces |
+| `pnpm typecheck`: Strict TypeScript checks |
+| `pnpm test`: Unit and API smoke tests |
+| `pnpm test:e2e`: Playwright storefront smoke test |
+| `pnpm db:generate`: Generate Prisma Client |
+| `pnpm db:migrate`: Create/apply a development migration |
+| `pnpm db:studio`: Open Prisma Studio |
+| `pnpm db:seed`: Seed the development footwear catalog |
 
 ## Environment
 

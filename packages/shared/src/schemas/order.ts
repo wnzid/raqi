@@ -4,6 +4,8 @@ export const orderStatusSchema = z.enum(['PENDING', 'CONFIRMED', 'PROCESSING', '
 export const paymentStatusSchema = z.enum(['UNPAID', 'PAID', 'FAILED', 'REFUNDED']);
 export const paymentMethodSchema = z.literal('CASH_ON_DELIVERY');
 export const shippingMethodCodeSchema = z.literal('STANDARD');
+export const deliveryFeeForDistrict = (district: string): number => district.trim().toLowerCase() === 'dhaka' ? 60 : 120;
+export const isInvoiceAvailable = (order: { confirmedAt: string | null }): boolean => Boolean(order.confirmedAt);
 export const checkoutContactSchema = z.object({ name: z.string().trim().min(2).max(200), email: z.string().trim().email().max(320), phone: z.string().trim().min(7).max(30) });
 export const checkoutAddressSchema = z.object({ recipientName: z.string().trim().min(2).max(200), phone: z.string().trim().min(7).max(30), addressLine: z.string().trim().min(3).max(500), area: z.string().trim().min(1).max(200).nullable().optional(), cityDistrict: z.string().trim().min(2).max(200), postalCode: z.string().trim().min(1).max(20).nullable().optional(), country: z.string().trim().length(2).toUpperCase().default('BD') });
 export const checkoutSchema = z.object({
@@ -13,7 +15,7 @@ export const checkoutSchema = z.object({
 
 export const shippingMethodSchema = z.object({ code: shippingMethodCodeSchema, name: z.string(), amount: z.number().nonnegative(), currency: z.literal('BDT') });
 export const orderItemSchema = z.object({ id: z.string(), productId: z.string().nullable(), variantId: z.string().nullable(), productName: z.string(), productSlug: z.string(), sku: z.string(), colorName: z.string(), sizeEu: z.number().nullable(), sizeUk: z.number().nullable(), sizeUs: z.number().nullable(), unitPrice: z.number().nonnegative(), quantity: z.number().int().positive(), lineSubtotal: z.number().nonnegative() });
-export const orderSummarySchema = z.object({ orderNumber: z.string(), status: orderStatusSchema, paymentStatus: paymentStatusSchema, paymentMethod: paymentMethodSchema, currency: z.literal('BDT'), subtotal: z.number().nonnegative(), shippingAmount: z.number().nonnegative(), total: z.number().nonnegative(), createdAt: z.string() });
+export const orderSummarySchema = z.object({ orderNumber: z.string(), status: orderStatusSchema, paymentStatus: paymentStatusSchema, paymentMethod: paymentMethodSchema, currency: z.literal('BDT'), subtotal: z.number().nonnegative(), shippingAmount: z.number().nonnegative(), total: z.number().nonnegative(), createdAt: z.string(), confirmedAt: z.string().nullable().default(null) });
 export const orderDetailSchema = orderSummarySchema.extend({ contact: checkoutContactSchema, shippingAddress: checkoutAddressSchema, shippingMethod: z.object({ code: z.string(), name: z.string() }), items: z.array(orderItemSchema) });
 export const orderConfirmationSchema = orderDetailSchema.extend({ guestLookupToken: z.string().optional() });
 export const orderHistorySchema = z.object({ data: z.array(orderSummarySchema) });
