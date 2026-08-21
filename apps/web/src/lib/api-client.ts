@@ -4,7 +4,7 @@ import { publicEnvironment } from './env';
 export class ApiError extends Error { constructor(public readonly status: number, message: string) { super(message); this.name = 'ApiError'; } }
 async function apiRequest<T>(path: string, parse: (data: unknown) => T, init?: RequestInit): Promise<T> {
   const response = await fetch(`${publicEnvironment.NEXT_PUBLIC_API_URL}${path}`, { ...init, credentials: 'include', headers: { 'Content-Type': 'application/json', ...init?.headers } });
-  if (!response.ok) throw new ApiError(response.status, `API request failed (${response.status})`);
+  if (!response.ok) { const body=await response.json().catch(()=>null)as{message?:string;detail?:string|{message?:string}}|null,detail=typeof body?.detail==='string'?body.detail:body?.detail?.message;throw new ApiError(response.status,body?.message??detail??`API request failed (${response.status})`); }
   return parse(response.status === 204 ? undefined : await response.json());
 }
 export const api = { health: (): Promise<HealthResponse> => apiRequest('/health', (value) => healthResponseSchema.parse(value)) };
@@ -30,7 +30,7 @@ export const cartApi = {
 };
 export const checkoutApi = {
   methods: (init?: RequestInit): Promise<ShippingMethod[]> => apiRequest('/checkout/shipping-methods', (value) => shippingMethodSchema.array().parse(value), { cache: 'no-store', ...init }),
-  place: (input: CheckoutInput): Promise<OrderConfirmation> => apiRequest('/checkout', (value) => orderConfirmationSchema.parse(value), { method: 'POST', body: JSON.stringify(input) }),
+  place: (input: CheckoutInput|Omit<CheckoutInput,'turnstileToken'>,idempotencyKey=crypto.randomUUID()): Promise<OrderConfirmation> => apiRequest('/checkout', (value) => orderConfirmationSchema.parse(value), { method: 'POST',headers:{'Idempotency-Key':idempotencyKey}, body: JSON.stringify(input) }),
 };
 export const ordersApi = {
   list: (init?: RequestInit): Promise<{ data: OrderSummary[] }> => apiRequest('/orders', (value) => orderHistorySchema.parse(value), { cache: 'no-store', ...init }),

@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@footwear/database';
-import type { AddCartItemInput, ShoppingCart, UpdateCartItemInput } from '@footwear/shared';
+import { MAX_CART_LINE_QUANTITY, MAX_CART_TOTAL_QUANTITY, type AddCartItemInput, type ShoppingCart, type UpdateCartItemInput } from '@footwear/shared';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import type { CartContext } from './cart-context.service';
 import { cartVariantSellable, mergedCartQuantity } from './cart.rules';
@@ -22,7 +22,10 @@ export class CartService {
       const cart = await this.getOrCreateCart(tx, context);
       const existing = await tx.cartItem.findUnique({ where: { cartId_variantId: { cartId: cart.id, variantId: input.variantId } } });
       const quantity = (existing?.quantity ?? 0) + input.quantity;
+      if (quantity > MAX_CART_LINE_QUANTITY) throw new ConflictException(`A cart line may contain at most ${MAX_CART_LINE_QUANTITY} items`);
       this.requireStock(variant!.stockQuantity, quantity);
+      const total = 'aggregate' in tx.cartItem ? await tx.cartItem.aggregate({ where: { cartId: cart.id, variantId: { not: input.variantId } }, _sum: { quantity: true } }) : { _sum: { quantity: 0 } };
+      if ((total._sum.quantity ?? 0) + quantity > MAX_CART_TOTAL_QUANTITY) throw new ConflictException(`A cart may contain at most ${MAX_CART_TOTAL_QUANTITY} items`);
       await tx.cartItem.upsert({ where: { cartId_variantId: { cartId: cart.id, variantId: input.variantId } }, create: { cartId: cart.id, variantId: input.variantId, quantity }, update: { quantity } });
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     return this.get(context);
@@ -33,6 +36,8 @@ export class CartService {
     const item = await this.prisma.cartItem.findFirst({ where: { id: itemId, cart: this.owner(context) }, include: { variant: { include: { product: true, color: true } } } });
     cartTiming('find item + variant',findStarted);
     if (!item) throw new NotFoundException('Cart item not found'); this.requireSellable(item.variant, input.quantity);
+    const total = await this.prisma.cartItem.aggregate({ where: { cartId: item.cartId, id: { not: item.id } }, _sum: { quantity: true } });
+    if ((total._sum.quantity ?? 0) + input.quantity > MAX_CART_TOTAL_QUANTITY) throw new ConflictException(`A cart may contain at most ${MAX_CART_TOTAL_QUANTITY} items`);
     const updateStarted=performance.now();await this.prisma.cartItem.update({ where: { id: item.id }, data: { quantity: input.quantity } });cartTiming('update item',updateStarted);const serializeStarted=performance.now();const cart=await this.prisma.cart.findUnique({where:{id:item.cartId},include:cartInclude});const result=cart?this.map(cart):this.empty();cartTiming('fetch + serialize cart',serializeStarted);return result;
   }
   async remove(context: CartContext, itemId: string): Promise<ShoppingCart> { const cart = await this.requireCart(context); const result = await this.prisma.cartItem.deleteMany({ where: { id: itemId, cartId: cart.id } }); if (!result.count) throw new NotFoundException('Cart item not found'); return this.get(context); }

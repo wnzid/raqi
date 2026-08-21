@@ -7,7 +7,8 @@
     "node": ">=20.19.0"
   },
   "scripts": {
-    "dev": "pnpm --filter @footwear/shared build && pnpm --parallel --filter @footwear/shared --filter @footwear/web --filter @footwear/api dev",
+    "dev": "pnpm --filter @footwear/shared build && concurrently --kill-others --names api,web \"pnpm dev:api\" \"pnpm wait:api && pnpm dev:web\"",
+    "wait:api": "wait-on --timeout 60000 http-get://localhost:4000/api/health/live",
     "dev:web": "pnpm --filter @footwear/web dev",
     "dev:api": "pnpm --filter @footwear/api dev",
     "build": "pnpm -r build",
@@ -22,6 +23,8 @@
     "bootstrap:super-admin": "pnpm --filter @footwear/api bootstrap:super-admin"
   },
   "devDependencies": {
-    "prisma": "^7.9.1"
+    "concurrently": "^10.0.5",
+    "prisma": "6.15.0",
+    "wait-on": "^9.1.0"
   }
 }

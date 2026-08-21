@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import PDFDocument from 'pdfkit';
 import sharp from 'sharp';
-import { compactSocialUrl, raqiContact } from '../config/raqi-contact';
+import { raqiContact } from '../config/raqi-contact';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
 
 const invoiceStatuses = new Set(['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']);
@@ -44,9 +44,7 @@ export class InvoiceService {
     document.y = Math.max(document.y, detailsTop + 118);
     this.renderItems(document, order.items);
     this.renderTotals(document, order);
-    const contact = raqiContact(this.config);
     document.moveDown(2).font('Helvetica').fontSize(9).fillColor('#555555').text('Thank you for shopping with RAQI.', { align: 'center' });
-    document.moveDown(0.5).fontSize(7.5).fillColor('#777777').text(`${contact.email}  |  ${compactSocialUrl(contact.facebookUrl)}  |  ${compactSocialUrl(contact.instagramUrl)}`, { align: 'center' });
     document.end();
     return { buffer: await completed, filename: `RAQI-Invoice-${this.safeReference(order.orderNumber)}.pdf` };
   }
@@ -56,7 +54,8 @@ export class InvoiceService {
     const logo=await this.logo();
     if(logo){try{document.image(logo,46,top,{fit:[52,52],align:'center',valign:'center'});document.font('Helvetica-Bold').fontSize(15).fillColor('#111111').text('RAQI',108,top+18,{characterSpacing:2})}catch(error){this.logger.warn(`Invoice logo could not be embedded: ${error instanceof Error?error.message:String(error)}`);document.font('Helvetica-Bold').fontSize(26).fillColor('#111111').text('RAQI',46,top,{characterSpacing:3})}}
     else document.font('Helvetica-Bold').fontSize(26).fillColor('#111111').text('RAQI',46,top,{characterSpacing:3});
-    const business = [this.config.get<string>('RAQI_BUSINESS_NAME') || 'RAQI', this.config.get<string>('RAQI_BUSINESS_ADDRESS'), this.config.get<string>('RAQI_BUSINESS_PHONE'), raqiContact(this.config).email, this.optionalRegistration('BIN', 'RAQI_BUSINESS_BIN'), this.optionalRegistration('TIN', 'RAQI_BUSINESS_TIN')].filter(Boolean).join('\n');
+    const contact=raqiContact(this.config);
+    const business = [this.config.get<string>('RAQI_BUSINESS_NAME') || 'RAQI', this.config.get<string>('RAQI_BUSINESS_ADDRESS'), contact.phone, contact.email, this.optionalRegistration('BIN', 'RAQI_BUSINESS_BIN'), this.optionalRegistration('TIN', 'RAQI_BUSINESS_TIN')].filter(Boolean).join('\n');
     document.font('Helvetica').fontSize(8.5).fillColor('#444444').text(business, 320, top, { width: 229, align: 'right', lineGap: 2 });
     document.y = Math.max(document.y, top + 74);
     document.moveTo(46, document.y).lineTo(549, document.y).strokeColor('#D8D8D8').stroke();

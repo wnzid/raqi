@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const genderSchema = z.enum(['WOMEN', 'MEN', 'UNISEX', 'KIDS']);
-export const moneySchema = z.coerce.number().finite().nonnegative();
+export const moneySchema = z.coerce.number().finite().positive();
 const salePriceSchema = z.coerce.number().finite().positive().nullable().optional();
 const validateSalePrice = (value: { basePrice?: number | undefined; salePrice?: number | null | undefined }, ctx: z.RefinementCtx) => {
   if (value.salePrice != null && value.basePrice != null && value.salePrice >= value.basePrice) ctx.addIssue({ code: 'custom', path: ['salePrice'], message: 'Sale price must be lower than the regular price' });

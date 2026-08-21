@@ -50,7 +50,7 @@ export function ProductEditor({ product, brands }: { product: AdminProduct; bran
     }
   }
 
-  return <><BlockingLoader visible={pending} title="Saving product changesâ€¦" message="Updating product details and storefront URL." /><form className="panel bg-white" onSubmit={save} aria-busy={pending} inert={pending ? true : undefined}>
+  return <><BlockingLoader visible={pending} title="Saving product changes…" message="Updating product details and storefront URL." /><form className="panel bg-white" onSubmit={save} aria-busy={pending} inert={pending ? true : undefined}>
     <h2 className="text-lg font-semibold">General details and availability</h2>
     <div className="mt-5 grid gap-3 sm:grid-cols-2">
       <label className="label">Model name<input className="field" name="name" defaultValue={product.family.name} required /></label>
@@ -63,7 +63,7 @@ export function ProductEditor({ product, brands }: { product: AdminProduct; bran
       <label className="sm:col-span-2"><input type="checkbox" name="isActive" defaultChecked={product.isActive} /> Active and available to publish</label>
       <label className="sm:col-span-2"><input type="checkbox" name="isNewArrival" defaultChecked={product.isNewArrival} /> Show in New Arrivals</label>
     </div>
-    <button className="button mt-5" disabled={pending}>{pending ? 'Savingâ€¦' : 'Save details'}</button>
+    <button className="button mt-5" disabled={pending}>{pending ? 'Saving…' : 'Save details'}</button>
   </form></>;
 }
 

@@ -49,9 +49,9 @@ export class AdminOrdersService {
     if (!canTransitionOrder(order.status, status)) throw new ConflictException(`Cannot transition ${order.status} to ${status}`);
     const confirmedAt = status === 'CONFIRMED' ? new Date() : undefined;
     await this.prisma.$transaction(async (transaction) => {
-      const transitioned = await transaction.order.updateMany({ where: { id: order.id, status: order.status }, data: { status, ...(confirmedAt ? { confirmedAt } : {}), ...(status === 'DELIVERED' ? { paymentStatus: 'PAID' as const } : {}) } });
+      const transitioned = await transaction.order.updateMany({ where: { id: order.id, status: order.status }, data: { status, reservationExpiresAt:null, ...(confirmedAt ? { confirmedAt } : {}), ...(status === 'DELIVERED' ? { paymentStatus: 'PAID' as const } : {}) } });
       if (transitioned.count !== 1) throw new ConflictException('Order status changed; reload and try again');
-      if (status === 'CANCELLED') for (const item of order.items) if (item.variantId) await transaction.productVariant.updateMany({ where: { id: item.variantId }, data: { stockQuantity: { increment: item.quantity } } });
+      if (status === 'CANCELLED') for (const item of order.items) { if(!item.variantId)throw new ConflictException('Cannot restore inventory for an order item whose variant is missing');const restored=await transaction.productVariant.updateMany({ where: { id: item.variantId }, data: { stockQuantity: { increment: item.quantity } } });if(restored.count!==1)throw new ConflictException('Inventory restoration failed; the order was not cancelled'); }
     });
     if (order.status === 'PENDING' && status === 'CONFIRMED') await this.confirmationEmail.send(order);
     const updated = await this.get(number);

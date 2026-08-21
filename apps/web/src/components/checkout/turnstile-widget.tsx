@@ -1,0 +1,4 @@
+'use client';
+import Script from'next/script';import{useCallback,useRef}from'react';
+declare global{interface Window{turnstile?:{render:(element:HTMLElement,options:Record<string,unknown>)=>string;reset:(id:string)=>void}}}
+export function TurnstileWidget({siteKey,onToken}:{siteKey:string;onToken:(token:string)=>void}){const host=useRef<HTMLDivElement>(null),widget=useRef<string|undefined>(undefined);const render=useCallback(()=>{if(host.current&&window.turnstile&&!widget.current)widget.current=window.turnstile.render(host.current,{sitekey:siteKey,action:'checkout',callback:onToken,'expired-callback':()=>onToken(''),'error-callback':()=>onToken('')})},[siteKey,onToken]);return <><Script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" strategy="afterInteractive" onLoad={render}/><div ref={host}/></>}

@@ -17,6 +17,11 @@ const environmentSchema = z.object({
   MAILJET_API_KEY: z.string().optional(), MAILJET_SECRET_KEY: z.string().optional(),
   MAILJET_FROM_EMAIL: z.string().email().optional(), MAILJET_FROM_NAME: z.string().default('RAQI'),
   ORDER_NOTIFICATION_EMAIL: z.string().email(),
+  PENDING_ORDER_RESERVATION_MINUTES: z.coerce.number().int().positive().default(30),
+  TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
+  TURNSTILE_EXPECTED_HOSTNAME: z.string().min(1).optional(),
+  TURNSTILE_BYPASS: z.enum(['true', 'false']).default('false'),
+  AUDIT_RETENTION_DAYS: z.coerce.number().int().positive().default(90),
   RAQI_CONTACT_EMAIL: z.string().email().default('raqiofficial.bd@gmail.com'),
   RAQI_FACEBOOK_URL: z.string().url().default('https://www.facebook.com/raqiofficial.bd'),
   RAQI_INSTAGRAM_URL: z.string().url().default('https://www.instagram.com/raqiofficial.bd'),
@@ -24,6 +29,12 @@ const environmentSchema = z.object({
   RAQI_BUSINESS_NAME: z.string().optional(), RAQI_BUSINESS_ADDRESS: z.string().optional(),
   RAQI_BUSINESS_EMAIL: z.string().email().optional(), RAQI_BUSINESS_PHONE: z.string().optional(),
   RAQI_BUSINESS_TIN: z.string().optional(), RAQI_BUSINESS_BIN: z.string().optional(),
+}).superRefine((env, ctx) => {
+  if (env.NODE_ENV !== 'production') return;
+  if (env.WEB_URL.includes('localhost')) ctx.addIssue({code:'custom',path:['WEB_URL'],message:'WEB_URL must be an explicit production URL'});
+  const required: Array<keyof typeof env> = ['WEB_URL','TURNSTILE_SECRET_KEY','S3_ENDPOINT','S3_BUCKET','S3_ACCESS_KEY_ID','S3_SECRET_ACCESS_KEY','S3_PUBLIC_URL'];
+  for (const key of required) if (!env[key]) ctx.addIssue({ code: 'custom', path: [key], message: `${key} is required in production` });
+  for(const key of ['MAILJET_API_KEY','MAILJET_SECRET_KEY','MAILJET_FROM_EMAIL'] as const)if(!env[key])ctx.addIssue({code:'custom',path:[key],message:`${key} is required in production`});
 });
 
 export type Environment = z.infer<typeof environmentSchema>;

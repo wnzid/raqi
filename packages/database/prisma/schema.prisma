@@ -7,7 +7,6 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-
 enum Gender {
   WOMEN
   MEN
@@ -249,7 +248,7 @@ model ProductVariant {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
-  @@unique([productId, colorId, sizeEu, sizeUk, sizeUs])
+  @@unique([productId, colorId, sizeEu])
   @@index([productId, isActive])
   @@index([colorId])
   @@index([stockQuantity])
@@ -306,6 +305,9 @@ model Order {
   shippingMethodCode   String
   shippingMethodName   String
   guestAccessTokenHash String?       @unique
+  guestAccessTokenEncrypted String?
+  checkoutIdempotencyKey String      @unique
+  reservationExpiresAt DateTime?
   items                OrderItem[]
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
@@ -313,6 +315,8 @@ model Order {
 
   @@index([userId, createdAt])
   @@index([contactEmail])
+  @@index([contactPhone, status])
+  @@index([status, reservationExpiresAt])
 }
 
 model OrderItem {

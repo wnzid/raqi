@@ -1,0 +1,2 @@
+import {describe,expect,it}from'vitest';import{safeRelativeRedirect}from'./safe-redirect';
+describe('safeRelativeRedirect',()=>{it.each(['//evil.example','https://evil.example','http://evil.example','/\\evil','not-a-path'])('rejects %s',value=>expect(safeRelativeRedirect(value)).toBe('/account'));it('keeps an application path',()=>expect(safeRelativeRedirect('/account/orders?tab=open')).toBe('/account/orders?tab=open'))});

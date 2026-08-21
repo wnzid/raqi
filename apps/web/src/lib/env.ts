@@ -1,3 +1,3 @@
 import { z } from 'zod';
-const publicEnvironmentSchema = z.object({ NEXT_PUBLIC_API_URL: z.string().url().default('http://localhost:4000/api') });
-export const publicEnvironment = publicEnvironmentSchema.parse({ NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL });
+const publicEnvironmentSchema = z.object({ NEXT_PUBLIC_API_URL: z.string().url().default('http://localhost:4000/api'),NEXT_PUBLIC_TURNSTILE_SITE_KEY:z.string().min(1).optional() }).superRefine((env,ctx)=>{if(process.env.NODE_ENV==='production'){if(!env.NEXT_PUBLIC_TURNSTILE_SITE_KEY)ctx.addIssue({code:'custom',path:['NEXT_PUBLIC_TURNSTILE_SITE_KEY'],message:'Required in production'});if(env.NEXT_PUBLIC_API_URL.includes('localhost'))ctx.addIssue({code:'custom',path:['NEXT_PUBLIC_API_URL'],message:'An explicit production API URL is required'})}});
+export const publicEnvironment = publicEnvironmentSchema.parse({ NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,NEXT_PUBLIC_TURNSTILE_SITE_KEY:process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY });

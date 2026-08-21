@@ -1,12 +1,14 @@
 ﻿import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { adminApi } from '@/lib/admin-api';
 import { ProductForm } from './product-form';
 import { AdminToastProvider } from './toast';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
-afterEach(() => { cleanup(); vi.restoreAllMocks(); document.body.style.overflow = ''; });
+const push=vi.fn(),refresh=vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
+beforeEach(()=>{vi.stubGlobal('URL',{...URL,createObjectURL:vi.fn(()=> 'blob:preview'),revokeObjectURL:vi.fn()})});
+afterEach(() => { cleanup(); vi.restoreAllMocks(); push.mockClear(); refresh.mockClear(); document.body.style.overflow = ''; });
 const brands = [{ id: 'brand', name: 'Running', slug: 'running', isActive: true }];
 const colors = [{ id: 'black', name: 'Black', slug: 'black', hex: '#000000', isActive: true }];
 const created = { family: { id: 'family', name: 'Runner' }, products: [{ id: 'product', colorId: 'black', slug: 'runner-black', title: 'Runner | Black' }] };
@@ -23,16 +25,16 @@ function setup(file?: File,selectBrand=true) {
 }
 
 describe('ProductForm blocking workflow', () => {
-  it('submits a product family without a brand',async()=>{const create=vi.spyOn(adminApi,'createFamily').mockResolvedValue(created);setup(undefined,false);fireEvent.click(screen.getByRole('button',{name:'Save product model'}));await screen.findByText('Product created successfully.');expect(create).toHaveBeenCalledWith(expect.objectContaining({brandId:null}))});
+  it('submits a product family without a brand and redirects after complete success',async()=>{const create=vi.spyOn(adminApi,'createFamily').mockResolvedValue(created);setup(undefined,false);fireEvent.click(screen.getByRole('button',{name:'Save product model'}));await screen.findByText('Product created successfully.');expect(create).toHaveBeenCalledWith(expect.objectContaining({brandId:null}));expect(push).toHaveBeenCalledWith('/admin/products');expect(refresh).toHaveBeenCalled()});
   it('blocks immediately and closes with a success toast', async () => {
     const creation = deferred<typeof created>();
     vi.spyOn(adminApi, 'createFamily').mockReturnValue(creation.promise);
     setup(); fireEvent.click(screen.getByRole('button', { name: 'Save product model' }));
-    expect(await screen.findByRole('status', { name: 'Creating productâ€¦' })).toBeTruthy();
+    expect(await screen.findByRole('status', { name: 'Creating product…' })).toBeTruthy();
     expect(document.querySelector('form')?.hasAttribute('inert')).toBe(true);
     creation.resolve(created);
     expect(await screen.findByText('Product created successfully.')).toBeTruthy();
-    await waitFor(() => expect(screen.queryByRole('status', { name: 'Creating productâ€¦' })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('status', { name: 'Creating product…' })).toBeNull());
     expect(document.querySelector('form')?.hasAttribute('inert')).toBe(false);
   });
 
@@ -40,7 +42,7 @@ describe('ProductForm blocking workflow', () => {
     vi.spyOn(adminApi, 'createFamily').mockRejectedValue(new Error('Could not create product.'));
     setup(); fireEvent.click(screen.getByRole('button', { name: 'Save product model' }));
     expect((await screen.findAllByText('Could not create product.')).length).toBeGreaterThan(0);
-    await waitFor(() => expect(screen.queryByRole('status', { name: 'Creating productâ€¦' })).toBeNull());
+    await waitFor(() => expect(screen.queryByRole('status', { name: 'Creating product…' })).toBeNull());
     expect(screen.getByRole('button', { name: 'Save product model' }).hasAttribute('disabled')).toBe(false);
   });
 
@@ -51,11 +53,25 @@ describe('ProductForm blocking workflow', () => {
     setup(new File(['image'], 'black.webp', { type: 'image/webp' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save product model' }));
     const retryButton = await screen.findByRole('button', { name: 'Retry failed uploads' });
+    expect(push).not.toHaveBeenCalled();
     fireEvent.click(retryButton);
-    expect(await screen.findByRole('status', { name: 'Uploading product imagesâ€¦' })).toBeTruthy();
+    expect(await screen.findByRole('status', { name: 'Uploading product images…' })).toBeTruthy();
     expect(create).toHaveBeenCalledTimes(1); expect(upload).toHaveBeenCalledTimes(2);
     retry.resolve({});
     expect(await screen.findByText('All product images uploaded successfully.')).toBeTruthy();
+    expect(push).toHaveBeenCalledWith('/admin/products');
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Retry failed uploads' })).toBeNull());
+  });
+
+  it('uploads the selected primary image first for its colorway', async () => {
+    vi.spyOn(adminApi, 'createFamily').mockResolvedValue(created);
+    const upload = vi.spyOn(adminApi, 'upload').mockResolvedValue({} as never);
+    setup();
+    const files = ['front.webp', 'side.webp', 'sole.webp'].map(name => new File(['image'], name, { type: 'image/webp' }));
+    fireEvent.change(screen.getByLabelText('Images for Black'), { target: { files } });
+    fireEvent.click(screen.getByRole('button', { name: 'Set sole.webp as primary image' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save product model' }));
+    await waitFor(() => expect(upload).toHaveBeenCalledTimes(3));
+    expect(upload.mock.calls.map(([, file, position]) => [(file as File).name, position])).toEqual([['sole.webp', 0], ['front.webp', 1], ['side.webp', 2]]);
   });
 });

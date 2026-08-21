@@ -6,7 +6,7 @@ import { CheckoutService } from './checkout.service';
 import { ShippingService } from './shipping.service';
 
 const address = { recipientName: 'Rafi Ahmed', phone: '01712345678', addressLine: '12 Road 4', area: null, cityDistrict: 'Dhaka', postalCode: null, country: 'BD' };
-const input = { contact: { name: 'Rafi Ahmed', email: 'RAFI@example.com', phone: '01712345678' }, shippingAddress: address, shippingMethod: 'STANDARD' as const, paymentMethod: 'CASH_ON_DELIVERY' as const };
+const input = { contact: { name: 'Rafi Ahmed', email: 'RAFI@example.com', phone: '01712345678' }, shippingAddress: address, shippingMethod: 'STANDARD' as const, paymentMethod: 'CASH_ON_DELIVERY' as const, turnstileToken:'test-token' };
 const product = { id: 'product-1', title: 'Runner', slug: 'runner', basePrice: new Prisma.Decimal(100), isActive: true };
 const variant = { id: 'variant-1', sku: 'RUN-42', isActive: true, stockQuantity: 3, priceOverride: null as Prisma.Decimal | null, sizeEu: new Prisma.Decimal(42), sizeUk: null, sizeUs: null, color: { name: 'Black' }, product };
 const cart = { id: 'cart-1', items: [{ id: 'cart-item-1', variantId: 'variant-1', quantity: 2, variant }] };

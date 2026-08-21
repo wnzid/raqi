@@ -7,6 +7,8 @@ if (!process.env.BETTER_AUTH_SECRET) {
   try { process.loadEnvFile(path.resolve(process.cwd(), '../../.env')); } catch { /* CI and deployments provide environment variables directly. */ }
 }
 
+const apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api').origin;
+
 const nextConfig: NextConfig = {
   transpilePackages: ['@footwear/shared'],
   images: {
@@ -19,5 +21,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async headers(){const developmentEval=process.env.NODE_ENV==='development'?" 'unsafe-eval'":'';return[{source:'/:path*',headers:[{key:'X-Content-Type-Options',value:'nosniff'},{key:'Referrer-Policy',value:'no-referrer'},{key:'Permissions-Policy',value:'camera=(), microphone=(), geolocation=()'},{key:'Content-Security-Policy',value:`default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'${developmentEval} https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self' ${apiOrigin} https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`}]}]}
 };
 export default nextConfig;

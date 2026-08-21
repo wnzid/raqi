@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { orderStatusSchema, paymentMethodSchema, paymentStatusSchema } from './order';
 import { userRoleSchema } from './account';
 export const managedUserSchema=z.object({id:z.string(),name:z.string(),email:z.string().email(),role:userRoleSchema,isActive:z.boolean(),createdAt:z.string(),updatedAt:z.string()});
-export const createManagedUserSchema=z.object({name:z.string().trim().min(2).max(200),email:z.string().trim().email(),password:z.string().min(8).max(200),role:userRoleSchema.default('CUSTOMER')});
+export const createManagedUserSchema=z.object({name:z.string().trim().min(2).max(200),email:z.string().trim().email(),role:userRoleSchema.default('CUSTOMER')});
 export const updateUserRoleSchema=z.object({role:userRoleSchema});
 export const updateUserStatusSchema=z.object({isActive:z.boolean()});
 export const managedUserQuerySchema=z.object({page:z.coerce.number().int().positive().default(1),pageSize:z.coerce.number().int().positive().max(100).default(25),q:z.string().trim().optional(),role:userRoleSchema.optional(),isActive:z.enum(['true','false']).transform(v=>v==='true').optional()});

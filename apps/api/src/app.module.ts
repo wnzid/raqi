@@ -1,5 +1,7 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { validateEnvironment } from './config/environment';
 import { HealthModule } from './health/health.module';
@@ -18,6 +20,7 @@ import { AnnouncementModule } from './announcement/announcement.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ envFilePath: '../../.env', isGlobal: true, cache: true, validate: validateEnvironment }),
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({ connection: { url: config.getOrThrow<string>('REDIS_URL') } }),
@@ -35,5 +38,6 @@ import { AnnouncementModule } from './announcement/announcement.module';
     SuperAdminModule,
     AnnouncementModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

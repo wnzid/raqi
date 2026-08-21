@@ -5,11 +5,13 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
+import helmet from 'helmet';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
   const prefix = 'api';
+  app.use(helmet({ contentSecurityPolicy:false, referrerPolicy:{policy:'no-referrer'}, hsts:config.get<string>('NODE_ENV')==='production'?undefined:false }));
 
   app.setGlobalPrefix(prefix);
   app.enableCors({ origin: config.getOrThrow<string>('WEB_URL'), credentials: true });

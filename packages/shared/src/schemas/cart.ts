@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { MAX_CART_LINE_QUANTITY } from '../constants/commerce';
 
-export const cartQuantitySchema = z.coerce.number().int().positive();
+export const cartQuantitySchema = z.coerce.number().int().positive().max(MAX_CART_LINE_QUANTITY, `A cart line may contain at most ${MAX_CART_LINE_QUANTITY} items`);
 export const addCartItemSchema = z.object({ variantId: z.string().cuid(), quantity: cartQuantitySchema.default(1) });
 export const updateCartItemSchema = z.object({ quantity: cartQuantitySchema });
 export const cartItemSchema = z.object({

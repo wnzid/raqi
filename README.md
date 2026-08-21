@@ -75,3 +75,13 @@ pnpm build
 ```
 
 CI repeats these checks and applies migrations against ephemeral PostgreSQL. Production deployment, payment/courier providers, checkout, workers, media SDKs, and search ranking are intentionally deferred until their feature requirements are implemented.
+
+## Production deployment and Cloudflare
+
+Expose browser traffic under one RAQI origin (for example `https://raqiofficial.com`) and reverse-proxy the Nest routes under `/api`; the checkout creation route is `POST /api/checkout`. Do not configure the frontend with a public hosting-provider origin URL. Restrict direct origin access with the provider firewall or Cloudflare Tunnel where practical. This same-origin topology keeps Better Auth cookies first-party; do not switch them to `SameSite=None` unless a genuinely cross-site HTTPS deployment requires it.
+
+Proxy the production hostname through Cloudflare (orange cloud), enable Bot Fight Mode under Security → Security settings → Bot traffic, and create a managed Turnstile widget for the production hostname. Set `NEXT_PUBLIC_TURNSTILE_SITE_KEY` in the web deployment and server-only `TURNSTILE_SECRET_KEY` plus `TURNSTILE_EXPECTED_HOSTNAME` in the API deployment. Production startup/build fails when required values are absent. `TURNSTILE_BYPASS=true` is only for local development and automated tests.
+
+Add a Cloudflare WAF/rate-limit rule targeting the deployed `POST /api/checkout` route and challenge abnormal request rates. Keep Nest throttling and Turnstile enabled because Cloudflare only protects traffic routed through it. Do not normally leave Under Attack Mode enabled; reserve it for an active Layer-7 attack because its interstitial can disrupt API traffic.
+
+Production also requires explicit `WEB_URL`, `NEXT_PUBLIC_API_URL`, Redis, database, Mailjet, and complete `S3_*`/R2 configuration. Local disk media fallback is development-only. Set `PENDING_ORDER_RESERVATION_MINUTES` explicitly (the development default is 30) and configure `AUDIT_RETENTION_DAYS` (default 90). Readiness is available at `/api/health/ready`; liveness is `/api/health/live`.
