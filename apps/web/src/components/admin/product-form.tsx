@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import type { Taxonomy } from '@/lib/admin-api';
 import { adminApi } from '@/lib/admin-api';
 import { uploadColorwayMedia, type CreatedFamily, type FailedUpload } from '@/lib/product-create-workflow';
+import { browserRandomId } from '@/lib/random-id';
 import { BlockingLoader } from './blocking-loader';
 import { useAdminToast } from './toast';
 
 type Size = { eu: number; uk: string; us: string; stock: number };
 type Colorway = { key: string; name: string; hex: string; price: string; salePrice: string; sizes: Size[]; images: File[]; primaryImageIndex: number };
-const fresh = (): Colorway => ({ key: crypto.randomUUID(), name: '', hex: '#111111', price: '', salePrice: '', sizes: [], images: [], primaryImageIndex: 0 });
+const fresh = (): Colorway => ({ key: browserRandomId(), name: '', hex: '#111111', price: '', salePrice: '', sizes: [], images: [], primaryImageIndex: 0 });
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const skuPart = (value: string) => slugify(value).replaceAll('-', '').slice(0, 8).toUpperCase();
 const primaryFirst = (colorway: Colorway) => colorway.images.length ? [colorway.images[colorway.primaryImageIndex]!, ...colorway.images.filter((_, index) => index !== colorway.primaryImageIndex)] : [];

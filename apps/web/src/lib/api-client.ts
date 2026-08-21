@@ -1,5 +1,6 @@
 import { accountSchema, activeAnnouncementSchema, addressSchema, cartSchema, healthResponseSchema, orderConfirmationSchema, orderDetailSchema, orderHistorySchema, productDetailSchema, productListResponseSchema, shippingMethodSchema, type ActiveAnnouncement, type AddCartItemInput, type CheckoutInput, type CreateAddressInput, type CustomerAccount, type CustomerAddress, type GuestOrderLookupInput, type HealthResponse, type OrderConfirmation, type OrderDetail, type OrderSummary, type ProductDetail, type ProductListResponse, type ShippingMethod, type ShoppingCart, type UpdateAddressInput, type UpdateCartItemInput, type UpdateProfileInput } from '@footwear/shared';
 import { publicEnvironment } from './env';
+import { secureRandomId } from './random-id';
 
 export class ApiError extends Error { constructor(public readonly status: number, message: string) { super(message); this.name = 'ApiError'; } }
 async function apiRequest<T>(path: string, parse: (data: unknown) => T, init?: RequestInit): Promise<T> {
@@ -30,7 +31,7 @@ export const cartApi = {
 };
 export const checkoutApi = {
   methods: (init?: RequestInit): Promise<ShippingMethod[]> => apiRequest('/checkout/shipping-methods', (value) => shippingMethodSchema.array().parse(value), { cache: 'no-store', ...init }),
-  place: (input: CheckoutInput|Omit<CheckoutInput,'turnstileToken'>,idempotencyKey=crypto.randomUUID()): Promise<OrderConfirmation> => apiRequest('/checkout', (value) => orderConfirmationSchema.parse(value), { method: 'POST',headers:{'Idempotency-Key':idempotencyKey}, body: JSON.stringify(input) }),
+  place: (input: CheckoutInput|Omit<CheckoutInput,'turnstileToken'>,idempotencyKey=secureRandomId()): Promise<OrderConfirmation> => apiRequest('/checkout', (value) => orderConfirmationSchema.parse(value), { method: 'POST',headers:{'Idempotency-Key':idempotencyKey}, body: JSON.stringify(input) }),
 };
 export const ordersApi = {
   list: (init?: RequestInit): Promise<{ data: OrderSummary[] }> => apiRequest('/orders', (value) => orderHistorySchema.parse(value), { cache: 'no-store', ...init }),
