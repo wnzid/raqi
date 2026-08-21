@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { browserRandomId, secureRandomId } from './random-id';
+import { browserRandomId, secureRandomUuid } from './random-id';
 
 const originalCrypto = globalThis.crypto;
 
@@ -17,14 +17,14 @@ describe('browserRandomId', () => {
   });
 });
 
-describe('secureRandomId', () => {
-  it('uses secure random bytes when randomUUID is unavailable', () => {
+describe('secureRandomUuid', () => {
+  it('uses secure random bytes to produce a UUID v4 when randomUUID is unavailable', () => {
     Object.defineProperty(globalThis, 'crypto', { configurable: true, value: { getRandomValues: (bytes: Uint8Array) => bytes.fill(0xab) } });
-    expect(secureRandomId()).toBe('ab'.repeat(16));
+    expect(secureRandomUuid()).toBe('abababab-abab-4bab-abab-abababababab');
   });
 
   it('throws instead of using an insecure fallback', () => {
     Object.defineProperty(globalThis, 'crypto', { configurable: true, value: {} });
-    expect(() => secureRandomId()).toThrow('Secure random generation is unavailable.');
+    expect(() => secureRandomUuid()).toThrow('Secure random generation is unavailable.');
   });
 });
