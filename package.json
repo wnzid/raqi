@@ -18,6 +18,7 @@
     "test:e2e": "pnpm --filter @footwear/e2e test",
     "db:generate": "pnpm --filter @footwear/database db:generate",
     "db:migrate": "pnpm --filter @footwear/database db:migrate",
+    "db:migrate:deploy": "pnpm --filter @footwear/database db:migrate:deploy",
     "db:studio": "pnpm --filter @footwear/database db:studio",
     "db:seed": "pnpm --filter @footwear/database db:seed",
     "bootstrap:super-admin": "pnpm --filter @footwear/api bootstrap:super-admin"

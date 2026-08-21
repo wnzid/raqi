@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next';
 import path from 'node:path';
 
+const monorepoRoot = path.resolve(process.cwd(), '../..');
+
 // Next runs from apps/web, while this monorepo keeps its local secrets at the root.
 // Existing process variables still win; this only supplies values that are absent.
 if (!process.env.BETTER_AUTH_SECRET) {
@@ -10,6 +12,8 @@ if (!process.env.BETTER_AUTH_SECRET) {
 const apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api').origin;
 
 const nextConfig: NextConfig = {
+  ...(process.env.NEXT_OUTPUT_MODE === 'standalone' ? { output: 'standalone' as const } : {}),
+  outputFileTracingRoot: monorepoRoot,
   transpilePackages: ['@footwear/shared'],
   images: {
     formats: ['image/avif', 'image/webp'],
