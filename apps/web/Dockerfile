@@ -29,6 +29,9 @@ ENV HOSTNAME=0.0.0.0
 WORKDIR /app
 COPY --from=build --chown=node:node /app/apps/web/.next/standalone ./
 COPY --from=build --chown=node:node /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build --chown=node:node \
+  /app/node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client \
+  ./apps/web/.prisma/client
 USER node
 EXPOSE 3000
 CMD ["node", "apps/web/server.js"]
