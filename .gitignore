@@ -16,3 +16,4 @@ packages/database/src/generated/
 .env.example
 
 /generated/prisma
+.env.production
